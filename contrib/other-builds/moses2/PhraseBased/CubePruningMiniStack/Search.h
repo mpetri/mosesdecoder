@@ -6,7 +6,6 @@
  */
 
 #pragma once
-#include <boost/pool/pool_alloc.hpp>
 #include "../Search.h"
 #include "Misc.h"
 #include "Stack.h"

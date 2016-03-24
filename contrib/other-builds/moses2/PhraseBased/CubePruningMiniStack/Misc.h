@@ -5,7 +5,6 @@
  *      Author: hieu
  */
 #pragma once
-#include <boost/pool/pool_alloc.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 #include <vector>

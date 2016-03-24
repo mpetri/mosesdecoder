@@ -11,7 +11,6 @@
 #include "../Hypothesis.h"
 #include "../../TypeDef.h"
 #include "../../Vector.h"
-#include "../../MemPool.h"
 #include "../../Recycler.h"
 #include "../../HypothesisColl.h"
 #include "../../legacy/Util2.h"
@@ -36,8 +35,7 @@ public:
 
   typedef boost::unordered_map<HypoCoverage, Moses2::HypothesisColl*,
 		  boost::hash<HypoCoverage>,
-		  std::equal_to<HypoCoverage>,
-  	  	  MemPoolAllocator< std::pair<HypoCoverage, Moses2::HypothesisColl*> >
+		  std::equal_to<HypoCoverage>
   	  	  > Coll;
 
 
