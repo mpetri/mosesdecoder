@@ -13,7 +13,7 @@
 namespace Moses2 {
 
 HypothesisColl::HypothesisColl(const ManagerBase &mgr)
-:m_coll(MemPoolAllocator<const HypothesisBase*>(mgr.GetPool()))
+:m_coll()
 ,m_sortedHypos(NULL)
 {}
 

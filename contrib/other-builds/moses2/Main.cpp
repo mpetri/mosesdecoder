@@ -75,6 +75,7 @@ int main(int argc, char** argv)
 
 void Temp()
 {
+/*
 	Moses2::MemPool pool;
 	Moses2::MemPoolAllocator<int> a(pool);
 
@@ -94,4 +95,5 @@ void Temp()
 	    purge_memory();
 
 	abort();
+*/
 }

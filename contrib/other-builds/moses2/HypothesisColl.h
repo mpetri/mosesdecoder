@@ -7,7 +7,6 @@
 #pragma once
 #include <boost/unordered_set.hpp>
 #include "HypothesisBase.h"
-#include "MemPool.h"
 #include "Recycler.h"
 #include "legacy/Util2.h"
 
@@ -22,8 +21,7 @@ class HypothesisColl
 public:
   typedef boost::unordered_set<const HypothesisBase*,
 			  UnorderedComparer<HypothesisBase>,
-			  UnorderedComparer<HypothesisBase>,
-			  MemPoolAllocator<const HypothesisBase*>
+			  UnorderedComparer<HypothesisBase>
 			   > _HCType;
 
   typedef _HCType::iterator iterator;
