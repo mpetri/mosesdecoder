@@ -30,7 +30,6 @@ namespace NSCubePruningMiniStack
 Search::Search(Manager &mgr)
 :Moses2::Search(mgr)
 ,m_stack(mgr)
-,m_cubeEdgeAlloc(mgr.GetPool())
 
 ,m_queue()
 
@@ -51,7 +50,7 @@ void Search::Decode()
 	// init cue edges
 	m_cubeEdges.resize(mgr.GetInput().GetSize() + 1);
 	for (size_t i = 0; i < m_cubeEdges.size(); ++i) {
-		m_cubeEdges[i] = new CubeEdges(m_cubeEdgeAlloc);
+		m_cubeEdges[i] = new CubeEdges();
 	}
 
 	const Bitmap &initBitmap = mgr.GetBitmaps().GetInitialBitmap();
