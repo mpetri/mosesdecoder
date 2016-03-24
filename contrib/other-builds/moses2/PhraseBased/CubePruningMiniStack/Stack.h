@@ -64,7 +64,7 @@ protected:
 	const Manager &m_mgr;
 	Coll m_coll;
 
-	std::deque<Moses2::HypothesisColl*, MemPoolAllocator<Moses2::HypothesisColl*> > m_miniStackRecycler;
+	std::deque<Moses2::HypothesisColl*> m_miniStackRecycler;
 
 
 };

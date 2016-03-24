@@ -22,7 +22,7 @@ namespace NSCubePruningMiniStack
 Stack::Stack(const Manager &mgr)
 :m_mgr(mgr)
 ,m_coll(MemPoolAllocator< std::pair<HypoCoverage, Moses2::HypothesisColl*> >(mgr.GetPool()))
-,m_miniStackRecycler(MemPoolAllocator<Moses2::HypothesisColl*>(mgr.GetPool()))
+,m_miniStackRecycler()
 {
 }
 
