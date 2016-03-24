@@ -68,7 +68,7 @@ class CubeEdge
 
 public:
 	typedef std::priority_queue<QueueItem*,
-				std::vector<QueueItem*, MemPoolAllocator<QueueItem*> >,
+				std::vector<QueueItem*>,
 				QueueItemOrderer> Queue;
 
 	typedef std::pair<const CubeEdge*, int> SeenPositionItem;
