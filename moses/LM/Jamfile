@@ -114,6 +114,18 @@ if $(with-oxlm) {
   lmmacros += LM_OXLM ;
 }
 
+#CSTLM
+local with-cstlm = [ option.get "with-cstlm" ] ;
+if $(with-cstlm) {
+  lib divsufsort : : <search>$(with-cstlm)/build/external/sdsl-lite/external/libdivsufsort/lib/ ;
+  lib divsufsort64 : : <search>$(with-cstlm)/build/external/sdsl-lite/external/libdivsufsort/lib/  ;
+  lib sdsl : : <search>$(with-cstlm)/build/external/sdsl-lite/lib  ;
+  obj CstLM.o : CstLM/CstLM.cpp : <include>$(with-cstlm)/include  ;
+  alias cstlm : cstlm.o sdsl divsufsort divsufsort64 : : : <cxxflags>-std=c++11 <define>LM_CST ;
+  dependencies += cstlm ;
+  lmmacros += LM_CST ;
+}
+
 
 #DALM
 local with-dalm = [ option.get "with-dalm" ] ;

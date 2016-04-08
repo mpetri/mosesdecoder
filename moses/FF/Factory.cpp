@@ -130,6 +130,12 @@
 #include "moses/LM/oxlm/SourceOxLM.h"
 #endif
 
+#ifdef LM_CST
+#include "moses/LM/cstlm/cstlm.h"
+#endif
+
+
+
 #include "util/exception.hh"
 
 #include <vector>
@@ -335,6 +341,10 @@ FeatureRegistry::FeatureRegistry()
 #endif
 #ifdef LM_DALM
   MOSES_FNAME2("DALM", LanguageModelDALM);
+#endif
+#ifdef LM_CST
+  MOSES_FNAME2("CSTLM-CHAR", CstLM<cstlm::charlm>);
+  MOSES_FNAME2("CSTLM-WORD", CstLM<cstlm::wordlm>);
 #endif
 #ifdef LM_OXLM
   MOSES_FNAME2("OxLM", OxLM<oxlm::LM>);

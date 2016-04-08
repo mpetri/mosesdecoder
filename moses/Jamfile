@@ -18,6 +18,14 @@ if $(with-oxlm) {
   oxlm = ;
 }
 
+with-cstlm = [ option.get "with-cstlm" ] ; 
+if $(with-cstlm) {
+  cstlm = <cxxflags>-std=c++11 <define>LM_CST <include>$(with-cstlm)/include ;
+} else {
+  cstlm = ;
+}
+
+
 local classifier = ;
 if [ option.get "with-vw" ] {
   classifier += ..//vw//classifier ;
