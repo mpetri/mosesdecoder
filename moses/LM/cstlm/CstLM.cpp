@@ -29,6 +29,10 @@ CstLM<Model>::CstLM(const string& line)
     // (1) call baseclass parameter reader which will call
     // our SetParameter function
     ReadParameters();
+    // TODO: do we need this??
+    if (m_factorType == NOT_FOUND) {
+        m_factorType = 0;
+    }
 
     // (2) load the index
     auto index_file = m_path + "/index/index-" + sdsl::util::class_to_hash(m_cstlm_model) + ".sdsl";
@@ -45,6 +49,9 @@ void CstLM<Model>::SetParameter(const string& key, const string& value)
 {
     if (key == "query_order") {
         m_ngram_order = Scan<uint64_t>(value);
+    }
+    else if (key == "factor") { // TODO: is this needed?
+        m_factorType = Scan<FactorType>(value);
     }
     else {
         LanguageModel::SetParameter(key, value);
@@ -121,7 +128,7 @@ void CstLM<Model>::CalcScore(const Phrase& phrase, float& fullScore, float& ngra
 }
 
 template <class Model>
-FFState* CstLM<Model>::EvaluateWhenApplied(const Hypothesis& hypo, const FFState* ps, ScoreComponentCollection* out) const
+FFState* CstLM<Model>::EvaluateWhenApplied(const Hypothesis& hypo, const FFState* previous_state, ScoreComponentCollection* out) const
 {
     const cstlm::LMQueryMKN<Model>& in_state = static_cast<const cstlm::LMQueryMKN<Model>&>(*ps).state;
 
@@ -138,11 +145,12 @@ FFState* CstLM<Model>::EvaluateWhenApplied(const Hypothesis& hypo, const FFState
     const std::size_t adjust_end = std::min(end, begin + m_ngram->Order() - 1);
 
     std::size_t position = begin;
+
     typename Model::State aux_state;
     typename Model::State *state0 = &ret->state, *state1 = &aux_state;
 
     float score = m_ngram->Score(in_state, TranslateID(hypo.GetWord(position)), *state0);
-    ++position;
+    float score++ position;
     for (; position < adjust_end; ++position) {
         score += m_ngram->Score(*state0, TranslateID(hypo.GetWord(position)), *state1);
         std::swap(state0, state1);
@@ -167,15 +175,15 @@ FFState* CstLM<Model>::EvaluateWhenApplied(const Hypothesis& hypo, const FFState
 
     score = TransformLMScore(score);
 
-    if (OOVFeatureEnabled()) {
-        std::vector<float> scores(2);
-        scores[0] = score;
-        scores[1] = 0.0;
-        out->PlusEquals(this, scores);
-    }
-    else {
-        out->PlusEquals(this, score);
-    }
+    // if (OOVFeatureEnabled()) {
+    //     std::vector<float> scores(2);
+    //     scores[0] = score;
+    //     scores[1] = 0.0;
+    //     out->PlusEquals(this, scores);
+    // }
+    // else {
+    //     out->PlusEquals(this, score);
+    // }
 
     return ret.release();
 }
