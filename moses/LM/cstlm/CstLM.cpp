@@ -38,10 +38,13 @@ CstLM<Model>::CstLM(const string& line)
     auto index_file = m_path + "/index/index-" + sdsl::util::class_to_hash(m_cstlm_model) + ".sdsl";
     cerr << "Loading cstlm index from file " << index_file << endl;
     m_cstlm_model.load(index_file);
+
+    // (3) create alphabet mapping between moses and cstlm
+    create_alphabet_mapping();
 }
 
 /*
-    this class will be called by ReadParameters with the
+    this method will be called by ReadParameters with the
     extracted key-value pairs.
 */
 template <class Model>
@@ -55,6 +58,35 @@ void CstLM<Model>::SetParameter(const string& key, const string& value)
     }
     else {
         LanguageModel::SetParameter(key, value);
+    }
+}
+
+/*
+    map from moses to cstlm alphabets and back
+*/
+template <class Model>
+void CstLM<Model>::create_alphabet_mapping()
+{
+    auto& collection = FactorCollection::Instance();
+    for (const auto& token : m_cstlm_model.vocab) {
+        auto cstlm_tok_str = token.first;
+        auto cstlm_tok_id = token.second;
+
+        /*
+             * All Factors in moses are accessed and created by a FactorCollection.
+             * By enforcing this strict creation processes (ie, forbidding factors
+             * from being created on the stack, etc), their memory addresses can
+             * be used as keys to uniquely identify them.
+             * Only 1 FactorCollection object should be created.
+        */
+        const Moses::Factor* factor = collection.AddFactor(str, false);
+
+        // map string
+        m_moses_2_cstlm_str[factor] = cstlm_tok_str;
+        m_cstlm_str_2_moses[cstlm_tok_str] = factor;
+        // map id
+        m_moses_2_cstlm_id[factor] = cstlm_tok_id;
+        m_cstlm_id_2_moses[cstlm_tok_id] = factor;
     }
 }
 
@@ -76,11 +108,8 @@ void CstLM<Model>::CalcScore(const Phrase& phrase, float& fullScore, float& ngra
     ngramScore = 0;
     oovCount = 0;
 
-    // if (!phrase.GetSize())
-    //     return;
-
-    // lm::ngram::ChartState discarded_sadly;
-    // lm::ngram::RuleScore<Model> scorer(*m_ngram, discarded_sadly);
+    if (!phrase.GetSize())
+        return;
 
     // size_t position;
     // if (m_beginSentenceFactor == phrase.GetWord(0).GetFactor(m_factorType)) {

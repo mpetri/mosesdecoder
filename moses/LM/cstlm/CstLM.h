@@ -1,10 +1,13 @@
 // $Id$
 #pragma once
 
+#include <unordered_map>
+
 #include "moses/LM/Base.h"
 #include "moses/Hypothesis.h"
 #include "moses/TypeDef.h"
 #include "moses/Word.h"
+#include "moses/Factor.h"
 
 namespace Moses {
 
@@ -54,9 +57,14 @@ public:
 
 protected:
     FactorType m_factorType;
-    std::vector<lm::WordIndex> m_lmIdLookup;
     Model m_cstlm_model;
-    uint64_t m_ngram_order;
+    uint64_t m_ngram_order; // query ngram order
+
+    // alphabet mapping between moses and cstlm
+    std::unordered_map<const Moses::Factor*, uint64_t> m_moses_2_cstlm_id;
+    std::unordered_map<uint64_t, const Moses::Factor*> m_cstlm_id_2_moses;
+    std::unordered_map<std::string, const Moses::Factor*> m_cstlm_str_2_moses;
+    std::unordered_map<const Moses::Factor*, std::string> m_moses_2_cstlm_str;
 };
 
 } // namespace Moses
