@@ -20,7 +20,7 @@ if $(with-oxlm) {
 
 with-cstlm = [ option.get "with-cstlm" ] ; 
 if $(with-cstlm) {
-  cstlm = <cxxflags>-std=c++11 <define>LM_CST <include>$(with-cstlm)/include ;
+  cstlm = <cxxflags>-std=c++11 <define>LM_CST <include>$(with-cstlm)/include <include>$(with-cstlm)/build/external/sdsl-lite/include <include>$(with-cstlm)/build/external/sdsl-lite/external/libdivsufsort/include/ ;
 } else {
   cstlm = ;
 }
@@ -31,7 +31,7 @@ if [ option.get "with-vw" ] {
   classifier += ..//vw//classifier ;
 }
 
-alias headers : ../util//kenutil $(classifier) : : : $(max-factors) $(dlib) $(oxlm) ; 
+alias headers : ../util//kenutil $(classifier) : : : $(max-factors) $(dlib) $(oxlm) $(cstlm) ; 
 alias ThreadPool : ThreadPool.cpp ;
 alias Util : Util.cpp Timer.cpp ;
 

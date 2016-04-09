@@ -131,7 +131,7 @@
 #endif
 
 #ifdef LM_CST
-#include "moses/LM/cstlm/cstlm.h"
+#include "moses/LM/cstlm/CstLM.h"
 #endif
 
 
