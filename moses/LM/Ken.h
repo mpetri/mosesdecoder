@@ -33,77 +33,80 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "moses/TypeDef.h"
 #include "moses/Word.h"
 
-namespace Moses
-{
+namespace Moses {
 
 //class LanguageModel;
 class FFState;
 
-LanguageModel *ConstructKenLM(const std::string &line);
+LanguageModel* ConstructKenLM(const std::string& line);
 
 //! This will also load. Returns a templated KenLM class
-LanguageModel *ConstructKenLM(const std::string &line, const std::string &file, FactorType factorType, util::LoadMethod load_method);
+LanguageModel* ConstructKenLM(const std::string& line, const std::string& file, FactorType factorType, util::LoadMethod load_method);
 
 /*
  * An implementation of single factor LM using Kenneth's code.
  */
-template <class Model> class LanguageModelKen : public LanguageModel
-{
+template <class Model>
+class LanguageModelKen : public LanguageModel {
 public:
-  LanguageModelKen(const std::string &line, const std::string &file, FactorType factorType, util::LoadMethod load_method);
+    LanguageModelKen(const std::string& line, const std::string& file, FactorType factorType, util::LoadMethod load_method);
 
-  virtual const FFState *EmptyHypothesisState(const InputType &/*input*/) const;
+    virtual const FFState* EmptyHypothesisState(const InputType& /*input*/) const;
 
-  virtual void CalcScore(const Phrase &phrase, float &fullScore, float &ngramScore, size_t &oovCount) const;
+    virtual void CalcScore(const Phrase& phrase, float& fullScore, float& ngramScore, size_t& oovCount) const;
 
-  virtual FFState *EvaluateWhenApplied(const Hypothesis &hypo, const FFState *ps, ScoreComponentCollection *out) const;
+    virtual FFState* EvaluateWhenApplied(const Hypothesis& hypo, const FFState* ps, ScoreComponentCollection* out) const;
 
-  virtual FFState *EvaluateWhenApplied(const ChartHypothesis& cur_hypo, int featureID, ScoreComponentCollection *accumulator) const;
+    virtual FFState* EvaluateWhenApplied(const ChartHypothesis& cur_hypo, int featureID, ScoreComponentCollection* accumulator) const;
 
-  virtual FFState *EvaluateWhenApplied(const Syntax::SHyperedge& hyperedge, int featureID, ScoreComponentCollection *accumulator) const;
+    virtual FFState* EvaluateWhenApplied(const Syntax::SHyperedge& hyperedge, int featureID, ScoreComponentCollection* accumulator) const;
 
-  virtual void IncrementalCallback(Incremental::Manager &manager) const;
-  virtual void ReportHistoryOrder(std::ostream &out,const Phrase &phrase) const;
+    virtual void IncrementalCallback(Incremental::Manager& manager) const;
+    virtual void ReportHistoryOrder(std::ostream& out, const Phrase& phrase) const;
 
-  virtual bool IsUseable(const FactorMask &mask) const;
+    virtual bool IsUseable(const FactorMask& mask) const;
 
 protected:
-  boost::shared_ptr<Model> m_ngram;
+    boost::shared_ptr<Model> m_ngram;
 
-  const Factor *m_beginSentenceFactor;
+    const Factor* m_beginSentenceFactor;
 
-  FactorType m_factorType;
+    FactorType m_factorType;
 
-  void LoadModel(const std::string &file, util::LoadMethod load_method);
+    void LoadModel(const std::string& file, util::LoadMethod load_method);
 
-  lm::WordIndex TranslateID(const Word &word) const {
-    std::size_t factor = word.GetFactor(m_factorType)->GetId();
-    return (factor >= m_lmIdLookup.size() ? 0 : m_lmIdLookup[factor]);
-  }
+    lm::WordIndex TranslateID(const Word& word) const
+    {
+        auto factor = word.GetFactor(m_factorType);
+        std::cerr << "TranslateID(" << factor->GetString() << ")" << std::endl;
+        std::size_t factor_id = factor->GetId();
+        return (factor_id >= m_lmIdLookup.size() ? 0 : m_lmIdLookup[factor_id]);
+    }
 
-  std::vector<lm::WordIndex> m_lmIdLookup;
+    std::vector<lm::WordIndex> m_lmIdLookup;
 
 private:
-  LanguageModelKen(const LanguageModelKen<Model> &copy_from);
+    LanguageModelKen(const LanguageModelKen<Model>& copy_from);
 
-  // Convert last words of hypothesis into vocab ids, returning an end pointer.
-  lm::WordIndex *LastIDs(const Hypothesis &hypo, lm::WordIndex *indices) const {
-    lm::WordIndex *index = indices;
-    lm::WordIndex *end = indices + m_ngram->Order() - 1;
-    int position = hypo.GetCurrTargetWordsRange().GetEndPos();
-    for (; ; ++index, --position) {
-      if (index == end) return index;
-      if (position == -1) {
-        *index = m_ngram->GetVocabulary().BeginSentence();
-        return index + 1;
-      }
-      *index = TranslateID(hypo.GetWord(position));
+    // Convert last words of hypothesis into vocab ids, returning an end pointer.
+    lm::WordIndex* LastIDs(const Hypothesis& hypo, lm::WordIndex* indices) const
+    {
+        lm::WordIndex* index = indices;
+        lm::WordIndex* end = indices + m_ngram->Order() - 1;
+        int position = hypo.GetCurrTargetWordsRange().GetEndPos();
+        for (;; ++index, --position) {
+            if (index == end)
+                return index;
+            if (position == -1) {
+                *index = m_ngram->GetVocabulary().BeginSentence();
+                return index + 1;
+            }
+            *index = TranslateID(hypo.GetWord(position));
+        }
     }
-  }
-
 
 protected:
-  //bool m_oovFeatureEnabled; /// originally from LanguageModel, copied here to separate the interfaces. Called m_enableOOVFeature there
+    //bool m_oovFeatureEnabled; /// originally from LanguageModel, copied here to separate the interfaces. Called m_enableOOVFeature there
 };
 
 } // namespace Moses

@@ -103,7 +103,7 @@ public:
              * from being created on the stack, etc), their memory addresses can
              * be used as keys to uniquely identify them.
              * Only 1 FactorCollection object should be created.
-        */
+            */
             const Moses::Factor* factor = collection.AddFactor(cstlm_tok_str, false);
 
             // map string
@@ -148,7 +148,7 @@ public:
         for (; word_idx < end_loop; word_idx++) {
             const auto& word = phrase.GetWord(word_idx);
             if (word.IsNonTerminal()) {
-                // TODO: what is this?
+                // TODO: what is this? KenLM performs some reset here
             }
             else {
                 auto cstlm_tok = Translate_Moses_2_CSTLMID(word);
@@ -160,10 +160,14 @@ public:
         for (; word_idx < phrase.GetSize(); word_idx++) {
             const auto& word = phrase.GetWord(word_idx);
             if (word.IsNonTerminal()) {
-                // TODO: what is this?
+                // TODO: what is this? KenLM performs some reset here
             }
             else {
                 auto cstlm_tok = Translate_Moses_2_CSTLMID(word);
+                if (cstlm_tok == cstlm::UNKNOWN_SYM) {
+                    oovCount++;
+                }
+                // TODO: do we still append UNK?
                 fullScore += cur_state.append_symbol(cstlm_tok);
             }
         }
@@ -252,8 +256,8 @@ protected:
     std::string m_collection_dir;
 
     // alphabet mapping between moses and cstlm
-    std::unordered_map<const Moses::Factor*, uint64_t> m_moses_2_cstlm_id;
-    std::unordered_map<uint64_t, const Moses::Factor*> m_cstlm_id_2_moses;
+    std::unordered_map<const Moses::Factor*, typename Model::value_type> m_moses_2_cstlm_id;
+    std::unordered_map<typename Model::value_type, const Moses::Factor*> m_cstlm_id_2_moses;
     std::unordered_map<std::string, const Moses::Factor*> m_cstlm_str_2_moses;
     std::unordered_map<const Moses::Factor*, std::string> m_moses_2_cstlm_str;
 };
