@@ -78,9 +78,11 @@ protected:
     lm::WordIndex TranslateID(const Word& word) const
     {
         auto factor = word.GetFactor(m_factorType);
-        std::cerr << "TranslateID(" << factor->GetString() << ")" << std::endl;
+        // std::cerr << "TranslateID(" << factor->GetString() << ")";
         std::size_t factor_id = factor->GetId();
-        return (factor_id >= m_lmIdLookup.size() ? 0 : m_lmIdLookup[factor_id]);
+        auto ret = (factor_id >= m_lmIdLookup.size() ? 0 : m_lmIdLookup[factor_id]);
+        // std::cerr << " -> " << ret << std::endl; //TranslateID(" << factor->GetString() << ")";
+        return ret;
     }
 
     std::vector<lm::WordIndex> m_lmIdLookup;

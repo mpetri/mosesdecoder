@@ -49,11 +49,11 @@ public:
         std::string index_file = m_collection_dir + "/index/index-" + sdsl::util::class_to_hash(m_cstlm_model) + ".sdsl";
         std::cerr << "loading cstlm index from file " << index_file << std::endl;
         if (cstlm::utils::file_exists(index_file)) {
-            std::cerr << "loading cstlm index from file '" << index_file << "'";
+            std::cerr << "loading cstlm index from file '" << index_file << "'" << std::endl;
             sdsl::load_from_file(m_cstlm_model, index_file);
         }
         else {
-            std::cerr << "cstlm index " << index_file << " does not exist. build it first";
+            std::cerr << "cstlm index " << index_file << " does not exist. build it first" << std::endl;
             exit(EXIT_FAILURE);
         }
 
@@ -152,7 +152,7 @@ public:
 
     virtual FFState* EvaluateWhenApplied(const Hypothesis& hypo, const FFState* previous_state, ScoreComponentCollection* out) const
     {
-        std::cerr << "CstLM::EvaluateWhenApplied" << std::endl;
+        // std::cerr << "CstLM::EvaluateWhenApplied" << std::endl;
         const cstlm::LMQueryMKN<Model>& in_state = static_cast<const CstLMState<Model>&>(*previous_state).state;
 
         std::unique_ptr<CstLMState<Model> > ret(new CstLMState<Model>());
@@ -172,7 +172,7 @@ public:
             score += ret->state.append_symbol(cstlm::PAT_END_SYM);
         }
         score = TransformLMScore(score);
-        std::cerr << "transformed score = " << score << std::endl;
+        // std::cerr << "transformed score = " << score << std::endl;
         if (OOVFeatureEnabled()) { // Taken from Ken.cpp
             std::vector<float> scores(2);
             scores[0] = score;
@@ -200,7 +200,7 @@ public:
 
     uint64_t Translate_Moses_2_CSTLMID(const Moses::Factor* f) const
     {
-        std::cerr << "TranslateID(" << f->GetString() << ")" << std::endl;
+        // std::cerr << "TranslateID(" << f->GetString() << ")" << std::endl;
         auto itr = m_moses_2_cstlm_id.find(f);
         if (itr != m_moses_2_cstlm_id.end()) {
             return itr->second;
@@ -243,15 +243,16 @@ public:
         else {
             // (1) append delim
             float score = 0;
-            if (state.empty()) {
+            // only add delim if we are not in empty state or right after <S>
+            if (!state.empty() && !state.is_start()) {
                 auto delim_id = m_cstlm_model.vocab.token2id(" ");
                 score += state.append_symbol(delim_id);
             }
             // (2) append bytes in factor string
             const auto& factor_str = f->GetString();
             for (const auto& sym : factor_str) {
-                auto delim_id = m_cstlm_model.vocab.token2id(std::string(1, sym), cstlm::UNKNOWN_SYM);
-                score += state.append_symbol(cstlm::UNKNOWN_SYM);
+                auto id = m_cstlm_model.vocab.token2id(std::string(1, sym), cstlm::UNKNOWN_SYM);
+                score += state.append_symbol(id);
             }
             return score;
         }

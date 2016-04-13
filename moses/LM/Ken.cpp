@@ -203,7 +203,7 @@ void LanguageModelKen<Model>::CalcScore(const Phrase& phrase, float& fullScore, 
 template <class Model>
 FFState* LanguageModelKen<Model>::EvaluateWhenApplied(const Hypothesis& hypo, const FFState* ps, ScoreComponentCollection* out) const
 {
-    std::cerr << "Ken::EvaluateWhenApplied" << std::endl;
+    // std::cerr << "Ken::EvaluateWhenApplied" << std::endl;
     const lm::ngram::State& in_state = static_cast<const KenLMState&>(*ps).state;
 
     std::auto_ptr<KenLMState> ret(new KenLMState());
@@ -231,13 +231,13 @@ FFState* LanguageModelKen<Model>::EvaluateWhenApplied(const Hypothesis& hypo, co
 
     if (hypo.IsSourceCompleted()) {
         // Score end of sentence.
-        std::cerr << "Score end of sentence." << std::endl;
+        // std::cerr << "Score end of sentence." << std::endl;
         std::vector<lm::WordIndex> indices(m_ngram->Order() - 1);
         const lm::WordIndex* last = LastIDs(hypo, &indices.front());
         score += m_ngram->FullScoreForgotState(&indices.front(), last, m_ngram->GetVocabulary().EndSentence(), ret->state).prob;
     }
     else if (adjust_end < end) {
-        std::cerr << "Get state after adding a long phrase." << std::endl;
+        // std::cerr << "Get state after adding a long phrase." << std::endl;
         // Get state after adding a long phrase.
         std::vector<lm::WordIndex> indices(m_ngram->Order() - 1);
         const lm::WordIndex* last = LastIDs(hypo, &indices.front());
@@ -249,7 +249,7 @@ FFState* LanguageModelKen<Model>::EvaluateWhenApplied(const Hypothesis& hypo, co
     }
 
     score = TransformLMScore(score);
-    std::cerr << "transformed score = " << score << std::endl;
+    // std::cerr << "transformed score = " << score << std::endl;
 
     if (OOVFeatureEnabled()) {
         std::vector<float> scores(2);
