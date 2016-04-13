@@ -141,11 +141,10 @@ public:
                 // TODO: what is this? KenLM performs some reset here
             }
             else {
-                auto cstlm_tok = Translate_Moses_2_CSTLMID(word);
-                if (cstlm_tok == cstlm::UNKNOWN_SYM) {
+                if (!IS_IN_VOCAB(word)) {
                     oovCount++;
                 }
-                fullScore += cur_state.append_symbol(cstlm_tok);
+                fullScore += Append_Token(cur_state, word);
             }
         }
         fullScore = TransformLMScore(fullScore);
@@ -166,8 +165,7 @@ public:
         const std::size_t end = hypo.GetCurrTargetWordsRange().GetEndPos() + 1;
         float score = 0.0f;
         for (auto position = begin; position < end; ++position) {
-            auto cstlm_tok = Translate_Moses_2_CSTLMID(hypo.GetWord(position));
-            score += ret->state.append_symbol(cstlm_tok);
+            score += Append_Token(ret->state, hypo.GetWord(position));
         }
         if (hypo.IsSourceCompleted()) {
             // Score end of sentence.
@@ -209,6 +207,53 @@ public:
         }
         else {
             return cstlm::UNKNOWN_SYM;
+        }
+    }
+
+    bool IS_IN_VOCAB(const Word& word) const
+    {
+        const auto& factor = word.GetFactor(m_factorType);
+        return IS_IN_VOCAB(factor);
+    }
+
+    bool IS_IN_VOCAB(const Moses::Factor* f) const
+    {
+        if (Model::byte_alphabet == false) {
+            return m_moses_2_cstlm_id.find(f) != m_moses_2_cstlm_id.end();
+        }
+        else {
+            return true;
+        }
+    }
+
+    template <class t_state>
+    float Append_Token(t_state& state, const Word& word) const
+    {
+        const auto& factor = word.GetFactor(m_factorType);
+        return Append_Token(state, factor);
+    }
+
+    template <class t_state>
+    float Append_Token(t_state& state, const Moses::Factor* f) const
+    {
+        if (Model::byte_alphabet == false) {
+            auto cstlm_tok = Translate_Moses_2_CSTLMID(f);
+            return state.append_symbol(cstlm_tok);
+        }
+        else {
+            // (1) append delim
+            float score = 0;
+            if (state.empty()) {
+                auto delim_id = m_cstlm_model.vocab.token2id(" ");
+                score += state.append_symbol(delim_id);
+            }
+            // (2) append bytes in factor string
+            const auto& factor_str = f->GetString();
+            for (const auto& sym : factor_str) {
+                auto delim_id = m_cstlm_model.vocab.token2id(std::string(1, sym), cstlm::UNKNOWN_SYM);
+                score += state.append_symbol(cstlm::UNKNOWN_SYM);
+            }
+            return score;
         }
     }
 
