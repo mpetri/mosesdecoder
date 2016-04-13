@@ -69,7 +69,7 @@ public:
     /* called by baseclass so we can read our parameters */
     void SetParameter(const std::string& key, const std::string& value)
     {
-        if (key == "query_order") {
+        if (key == "order") {
             m_ngram_order = Scan<uint64_t>(value);
         }
         else if (key == "path") { // TODO: is this needed?
@@ -132,34 +132,12 @@ public:
         if (!phrase.GetSize())
             return;
 
-        // does the phrase start with <S>?
-        size_t word_idx = 0;
-        auto cur_state = cstlm::LMQueryMKN<Model>(&m_cstlm_model, m_ngram_order);
-        if (Translate_Moses_2_CSTLMID(phrase.GetWord(0).GetFactor(m_factorType)) == cstlm::PAT_START_SYM) {
-            word_idx = 1;
-        }
-        else {
-            // TODO: Is this possible for us? I thought we are always working under the assumption that
-            // when we score something it has to start with <S>
-        }
-
+        auto cur_state = cstlm::LMQueryMKN<Model>(&m_cstlm_model, m_ngram_order, false);
         // (1) score the first ngram only
-        size_t end_loop = std::min(m_ngram_order, phrase.GetSize());
-        for (; word_idx < end_loop; word_idx++) {
+        for (size_t word_idx = 0; word_idx < phrase.GetSize(); word_idx++) {
             const auto& word = phrase.GetWord(word_idx);
             if (word.IsNonTerminal()) {
-                // TODO: what is this? KenLM performs some reset here
-            }
-            else {
-                auto cstlm_tok = Translate_Moses_2_CSTLMID(word);
-                fullScore += cur_state.append_symbol(cstlm_tok);
-            }
-        }
-        ngramScore = TransformLMScore(fullScore);
-        // (2) score the whole phrase
-        for (; word_idx < phrase.GetSize(); word_idx++) {
-            const auto& word = phrase.GetWord(word_idx);
-            if (word.IsNonTerminal()) {
+                std::cerr << "\n CstLM::CalcScore: word.IsNonTerminal == true -> THIS SHOULD NOT HAPPEN!!!" << std::endl;
                 // TODO: what is this? KenLM performs some reset here
             }
             else {
@@ -167,56 +145,45 @@ public:
                 if (cstlm_tok == cstlm::UNKNOWN_SYM) {
                     oovCount++;
                 }
-                // TODO: do we still append UNK?
                 fullScore += cur_state.append_symbol(cstlm_tok);
             }
         }
-
         fullScore = TransformLMScore(fullScore);
     }
 
     virtual FFState* EvaluateWhenApplied(const Hypothesis& hypo, const FFState* previous_state, ScoreComponentCollection* out) const
     {
+        std::cerr << "CstLM::EvaluateWhenApplied" << std::endl;
         const cstlm::LMQueryMKN<Model>& in_state = static_cast<const CstLMState<Model>&>(*previous_state).state;
 
         std::unique_ptr<CstLMState<Model> > ret(new CstLMState<Model>());
-        ret->state = in_state;
-
+        ret->state = in_state; // make a copy of the in_state
         if (!hypo.GetCurrTargetLength()) {
             return ret.release();
         }
-
         const std::size_t begin = hypo.GetCurrTargetWordsRange().GetStartPos();
         //[begin, end) in STL-like fashion.
         const std::size_t end = hypo.GetCurrTargetWordsRange().GetEndPos() + 1;
-        const std::size_t adjust_end = std::min(end, begin + m_ngram_order - 1);
-
-        std::size_t position = begin;
-
         float score = 0.0f;
-        for (; position < adjust_end; ++position) {
+        for (auto position = begin; position < end; ++position) {
             auto cstlm_tok = Translate_Moses_2_CSTLMID(hypo.GetWord(position));
             score += ret->state.append_symbol(cstlm_tok);
         }
-
         if (hypo.IsSourceCompleted()) {
             // Score end of sentence.
-            auto cstlm_tok = cstlm::PAT_END_SYM;
-            score += ret->state.append_symbol(cstlm_tok);
+            score += ret->state.append_symbol(cstlm::PAT_END_SYM);
         }
-        else if (adjust_end < end) {
-            // TODO WHAT DO WE NEED THIS FOR?
-            // Get state after adding a long phrase.
-            // std::vector<lm::WordIndex> indices(m_ngram->Order() - 1);
-            // const lm::WordIndex* last = LastIDs(hypo, &indices.front());
-            // m_ngram->GetState(&indices.front(), last, ret->state);
-        }
-        else { // TODO ??? if (state0 != &ret->state) {
-            // Short enough phrase that we can just reuse the state.
-            // ret->state = *state0;
-        }
-
         score = TransformLMScore(score);
+        std::cerr << "transformed score = " << score << std::endl;
+        if (OOVFeatureEnabled()) { // Taken from Ken.cpp
+            std::vector<float> scores(2);
+            scores[0] = score;
+            scores[1] = 0;
+            out->PlusEquals(this, scores);
+        }
+        else {
+            out->PlusEquals(this, score);
+        }
         return ret.release();
     }
     virtual FFState* EvaluateWhenApplied(const ChartHypothesis& cur_hypo, int featureID, ScoreComponentCollection* accumulator) const
@@ -235,6 +202,7 @@ public:
 
     uint64_t Translate_Moses_2_CSTLMID(const Moses::Factor* f) const
     {
+        std::cerr << "TranslateID(" << f->GetString() << ")" << std::endl;
         auto itr = m_moses_2_cstlm_id.find(f);
         if (itr != m_moses_2_cstlm_id.end()) {
             return itr->second;

@@ -146,20 +146,12 @@ const FFState* LanguageModelKen<Model>::EmptyHypothesisState(const InputType& /*
 template <class Model>
 void LanguageModelKen<Model>::CalcScore(const Phrase& phrase, float& fullScore, float& ngramScore, size_t& oovCount) const
 {
-    std::cerr << "Ken::CalcScore" << std::endl;
     fullScore = 0;
     ngramScore = 0;
     oovCount = 0;
 
     if (!phrase.GetSize())
         return;
-
-    std::cerr << "Phrase = [";
-    for (size_t i = 0; i < phrase.GetSize(); i++) {
-        std::cerr << phrase.GetWord(i).GetFactor(m_factorType)->GetString() << ",";
-    }
-    std::cerr << "]" << std::endl;
-
     lm::ngram::ChartState discarded_sadly;
     lm::ngram::RuleScore<Model> scorer(*m_ngram, discarded_sadly);
 
