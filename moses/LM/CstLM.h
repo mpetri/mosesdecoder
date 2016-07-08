@@ -78,6 +78,14 @@ public:
         else if (key == "factor") { // TODO: is this needed?
             m_factorType = Scan<FactorType>(value);
         }
+        else if (key == "caching") { // TODO: is this needed?
+            uint64_t enable_cache = Scan<uint64_t>(value);
+            if(enable_cache == 1) {
+                m_caching = true;
+            } else {
+                m_caching = false;
+            }
+        }
         else {
             LanguageModel::SetParameter(key, value);
         }
@@ -86,7 +94,7 @@ public:
     virtual const FFState* EmptyHypothesisState(const InputType& input) const
     {
         CstLMState<Model>* ret = new CstLMState<Model>();
-        ret->state = cstlm::LMQueryMKN<Model>(&m_cstlm_model, m_ngram_order);
+        ret->state = cstlm::LMQueryMKN<Model>(&m_cstlm_model, m_ngram_order,m_caching);
         return ret;
     }
 
@@ -132,7 +140,7 @@ public:
         if (!phrase.GetSize())
             return;
 
-        auto cur_state = cstlm::LMQueryMKN<Model>(&m_cstlm_model, m_ngram_order, false);
+        auto cur_state = cstlm::LMQueryMKN<Model>(&m_cstlm_model, m_ngram_order, false,m_caching);
         // (1) score the first ngram only
         for (size_t word_idx = 0; word_idx < phrase.GetSize(); word_idx++) {
             const auto& word = phrase.GetWord(word_idx);
@@ -268,6 +276,7 @@ protected:
     Model m_cstlm_model;
     uint64_t m_ngram_order; // query ngram order
     std::string m_collection_dir;
+    bool m_caching;
 
     // alphabet mapping between moses and cstlm
     std::unordered_map<const Moses::Factor*, typename Model::value_type> m_moses_2_cstlm_id;
