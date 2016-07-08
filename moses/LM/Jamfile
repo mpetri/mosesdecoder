@@ -120,7 +120,8 @@ if $(with-cstlm) {
   lib divsufsort : : <search>$(with-cstlm)/build/external/sdsl-lite/external/libdivsufsort/lib/ ;
   lib divsufsort64 : : <search>$(with-cstlm)/build/external/sdsl-lite/external/libdivsufsort/lib/  ;
   lib sdsl : : <search>$(with-cstlm)/build/external/sdsl-lite/lib  ;
-  alias cstlm : sdsl divsufsort divsufsort64 : : : <cxxflags>-std=c++11 <define>LM_CST ;
+  lib cilkrts ;
+  alias cstlm : sdsl divsufsort divsufsort64 : : : <cxxflags>-std=c++11 <cxxflags>-fcilkplus <linkflags>-fcilkplus <define>LM_CST ;
   dependencies += cstlm ;
   lmmacros += LM_CST ;
 }
